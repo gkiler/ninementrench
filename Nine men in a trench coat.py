@@ -46,7 +46,6 @@ goal_locs = [
     (-1,-1),(1,0),(1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8)
 ]
 def get_cost(game_state):
-    if np.where(game_state == 1) != (1,0)
     cost = 0
     for soldier in range(1,10):
         # soldiers 1->9
@@ -101,13 +100,16 @@ iterations = 0
 expansions = 0
 max_queue_size = 0
 while not pq.empty():
-    if iterations % 10000 == 0:
+    if iterations % 25000 == 0:
         print(f"Iterations: {iterations}\nMax_Queue_Size: {max_queue_size}\nExpansions: {expansions}\n")
     # tracking
     iterations += 1
     max_queue_size = max(max_queue_size,pq.qsize())
     # get lowest cost node from p-queue
     node = pq.get()
+
+    if iterations % 100_000 == 0:
+      print(f"Best State So Far:\n\n{node.state}")
 
     # goal check
     if is_goal(node.state):
