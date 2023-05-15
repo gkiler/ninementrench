@@ -165,7 +165,8 @@ if choice == 2:
     soldier_list = input("Give the order of soldiers 1->9 in the trench at the start, separated by spaces:\n").split(" ")
     for i, soldier in enumerate(soldier_list):
         init_state[1][i+1] = int(soldier)
-
+import time
+start = time.time()
 while not pq.empty():
     if expansions % 100_000 == 0:
         print(f"\nIterations: {iterations}\nMax_Queue_Size: {max_queue_size}\nExpansions: {expansions}\n")
@@ -195,6 +196,8 @@ while not pq.empty():
         for move in moves[::-1]:
             print(f"{move}",end="\n\n")
         print(f"\nMax_Queue_Size: {max_queue_size}\nExpansions: {expansions}\nDepth: {depth}\n")
+        end = time.time()
+        print(f"Total Time: {str(end-start)}\n")
         quit()
 
     # expand current lowest code node
