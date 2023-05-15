@@ -8,10 +8,17 @@ from copy import deepcopy
 
 class Node():
     def __init__(self,state,action,parent):
-        self.cost = get_cost(state)
+        if parent:
+            self.cost = get_cost(state) + parent.cost
+        else:
+            self.cost = get_cost(state)
         self.state = state
         self.action = action
         self.parent = parent
+        if parent:
+            self.depth = parent.depth + 1
+        else:
+            self.depth = 0
 
     def __lt__(self,rhs):
         return self.cost < rhs.cost
@@ -42,8 +49,8 @@ def get_cost(game_state):
     cost = 0
     for soldier in range(1,10):
         # soldiers 1->9
-        soldier_loc = np.where(soldier==game_state,game_state)
-        cost += abs((soldier_loc[0] - goal_locs[soldier][0])) + abs((soldier_loc[1] - goal_locs[soldier][1]))
+        soldier_loc = np.where(game_state == soldier)
+        cost += int(abs((soldier_loc[0] - goal_locs[soldier][0])) + abs((soldier_loc[1] - goal_locs[soldier][1])))
     return cost
 
     cost = np.sum(np.equal(game_state,goal_state)) # Misplaced heuristic doesnt seem to work either
@@ -93,7 +100,7 @@ iterations = 0
 expansions = 0
 max_queue_size = 0
 while not pq.empty():
-    if iterations % 1000 == 0:
+    if iterations % 10000 == 0:
         print(f"Iterations: {iterations}\nMax_Queue_Size: {max_queue_size}\nExpansions: {expansions}\n")
     # tracking
     iterations += 1
@@ -105,12 +112,15 @@ while not pq.empty():
     if is_goal(node.state):
         print("Seargant is in place...")
         moves = []
+        depth = node.depth
         while node.parent is not None:
             moves.append(node.action)
             node = node.parent
         moves.append(node.action)
         for move in moves[::-1]:
             print(f"{move}",end=" -> ")
+        print(f"Max_Queue_Size: {max_queue_size}\nExpansions: {expansions}\nDepth: {depth}\n")
+        quit()
 
     # expand current lowest code node
     expansions += 1
