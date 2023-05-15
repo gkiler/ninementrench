@@ -8,10 +8,6 @@ from copy import deepcopy
 
 class Node():
     def __init__(self,state,action,parent):
-        if parent:
-            self.cost = get_cost(state) + parent.cost
-        else:
-            self.cost = get_cost(state)
         self.state = state
         self.action = action
         self.parent = parent
@@ -19,6 +15,11 @@ class Node():
             self.depth = parent.depth + 1
         else:
             self.depth = 0
+
+        if parent:
+            self.cost = get_cost(state) + parent.cost
+        else:
+            self.cost = get_cost(state)
 
     def __lt__(self,rhs):
         if self.cost == rhs.cost:
@@ -54,7 +55,7 @@ def get_cost(game_state):
     #     soldier_range = range(1,2)
     # else:
     #     soldier_range = range(2,10)
-    soldier_range = range(1,10)
+    soldier_range = [1,2,3,4,5,6,7,8,9]
     cost = 0
     for soldier in soldier_range:
         # soldiers 1->9
@@ -79,27 +80,44 @@ def expand(node):
 
     # set ranges for iterating to find soldiers
     # if soldier 1 is in place, leave him alone
-    yrange = range(game_state.shape[0])
-    if np.where(node.state == 1) == (1,0):
-        xrange = range(2,10)
-    else:
-        xrange = range(1,10)
-
-    for i in yrange:
-        for j in xrange:
-            if game_state[i,j] > 0:
-                moves = [(i+1,j),(i-1,j),(i,j+1),(i,j-1)]
+    yrange = range(0,2)
+    # if np.where(node.state == 1) == (1,0):
+    #     xrange = range(1,10)
+    # else:
+    #     xrange = range(0,10)
+    xrange = range(0,10)
+    moves = []
+    for y in range(0,game_state.shape[0]):
+        for x in range(0,game_state.shape[1]):
+            if game_state[y,x] > 0:
+                # check left, right, up, down
+                moves = []
+                try:
+                    temp = (y,x)
+                    if game_state[y+1,x] == 0:
+                        moves.append((y+1,x))
+                except:
+                    pass
+                try:
+                    if game_state[y-1,x] == 0:
+                        moves.append((y-1,x))
+                except:
+                    pass
+                try:
+                    if game_state[y,x+1] == 0:
+                        moves.append(y,x+1)
+                except:
+                    pass
+                try:
+                    if game_state[y,x-1] == 0:
+                        moves.append((y,x-1))
+                except:
+                    pass
                 for move in moves:
-                    try:
-                        if game_state[move] == 0:
-                            pass
-                    except:
-                        continue
-                    if game_state[move] == 0:
-                        new_state = state_swap(game_state,(i,j),move)
-                        if new_state.tobytes() not in seen_states:
-                            new_nodes.append(Node(new_state,f"{(i,j)} to {move}",node))
-                            seen_states.add(new_state.tobytes()) 
+                    new_state = state_swap(game_state,(y,x),move)
+                    if new_state.tobytes() not in seen_states:
+                        new_nodes.append(Node(new_state,f"{(y,x)} to {move}",node))
+                        # seen_states.add(new_state.tobytes()) 
     return new_nodes
 
                 
@@ -108,6 +126,7 @@ init_state = np.array([
     [-1,-1,-1,0,-1,0,-1,0,-1,-1],
     [0,2,3,4,5,6,7,8,9,1]
 ])
+
 #-1 represents solid dirt, each number is a person, 0 is empty space
 print(get_cost(init_state))
 pq = PriorityQueue()
@@ -118,15 +137,18 @@ iterations = 0
 expansions = 0
 max_queue_size = 0
 while not pq.empty():
-    if iterations % 25_000 == 0:
+    if expansions % 25_000 == 0:
         print(f"Iterations: {iterations}\nMax_Queue_Size: {max_queue_size}\nExpansions: {expansions}\n")
     # tracking
     iterations += 1
     max_queue_size = max(max_queue_size,pq.qsize())
     # get lowest cost node from p-queue
     node = pq.get()
+    while node.state.tobytes() in seen_states:
+        node = pq.get()
+        iterations += 1
 
-    if iterations % 100_000 == 0:
+    if expansions % 100_000 == 0:
       print(f"Best State So Far:\n\n{node.state}")
 
     # goal check
@@ -146,5 +168,6 @@ while not pq.empty():
     # expand current lowest code node
     expansions += 1
     new_nodes = expand(node)
+    seen_states.add(node.state.tobytes())
     for new_node in new_nodes:
         pq.put(new_node)
