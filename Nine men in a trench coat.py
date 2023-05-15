@@ -81,9 +81,9 @@ def expand(node):
     # if soldier 1 is in place, leave him alone
     yrange = range(game_state.shape[0])
     if np.where(node.state == 1) == (1,0):
-        xrange = range(game_state.shape[1][1:])
+        xrange = range(2,10)
     else:
-        xrange = range(game_state.shape[1])
+        xrange = range(1,10)
 
     for i in yrange:
         for j in xrange:
