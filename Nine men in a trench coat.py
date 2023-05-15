@@ -2,11 +2,15 @@
 from queue import PriorityQueue
 import numpy as np
 from copy import deepcopy
+
+# State
 # Looks like this
 #       _   _   _  
 # _ _ _ _ _ _ _ _ _ _
 
 class Node():
+    # Nodes are given a state representation, an action representation of the previous move for traceback,
+    # parent node reference for traceback, and depth for record keeping purposes
     def __init__(self,state,action,parent):
         self.state = state
         self.action = action
@@ -21,6 +25,7 @@ class Node():
         else:
             self.cost = get_cost(state)
 
+    #comparison operators needed for priority queue to work
     def __lt__(self,rhs):
         if self.cost == rhs.cost:
             return self.depth < rhs.depth
@@ -32,33 +37,30 @@ class Node():
         return self.cost <= rhs.cost
 
 
+#seen states will be a hash table of states converted to bytes for space saving measures
 seen_states = set()
 
+# Create goal state with soldiers
 goal_state = np.array([
     [-1,-1,-1,0,-1,0,-1,0,-1,-1],
     [1,2,3,4,5,6,7,8,9,0]
 ])
 
+# Deep copy previous state, then use python swap heuristic to create a return the new state
 def state_swap(old_state,first,second):
     game_state = deepcopy(old_state)
     game_state[first], game_state[second] = game_state[second], game_state[first]
     return game_state
 
-def see_state(game_state):
-    seen_states.add(game_state.to_bytes())
-
+# Just a bit of laziness to access where each soldier should be in the goal state
 goal_locs = [
     (-1,-1),(1,0),(1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8)
 ]
+# Get cost iterates over all soldiers, customizable by soldier "ID"s, takes manhattan distance of curr pos vs goal pos
 def get_cost(game_state):
-    # if np.where(game_state == 1) != (1,0):
-    #     soldier_range = range(1,2)
-    # else:
-    #     soldier_range = range(2,10)
     soldier_range = [1,2,3,4,5,6,7,8,9]
     cost = 0
     for soldier in soldier_range:
-        # soldiers 1->9
         soldier_loc = np.where(game_state == soldier)
         cost += int(abs((soldier_loc[0] - goal_locs[soldier][0])) + abs((soldier_loc[1] - goal_locs[soldier][1])))
     return cost
@@ -70,22 +72,16 @@ def get_cost(game_state):
     return loc[0] + loc[1] # Distance for seargant does not work. Needs manhattan
 
 def is_goal(game_state):
+    # Numpy function just returns true if two states are equal.
     return np.array_equal(game_state,goal_state)
 
 def expand(node):
-    # iterate over each space
+    # in simple terms:
+    # iterate over each space, is it a soldier?
     # can the guy move up, down, left, or right?
     new_nodes = []
     game_state = node.state
 
-    # set ranges for iterating to find soldiers
-    # if soldier 1 is in place, leave him alone
-    yrange = range(0,2)
-    # if np.where(node.state == 1) == (1,0):
-    #     xrange = range(1,10)
-    # else:
-    #     xrange = range(0,10)
-    xrange = range(0,10)
     moves = []
     for y in range(0,game_state.shape[0]):
         for x in range(0,game_state.shape[1]):
@@ -121,14 +117,13 @@ def expand(node):
     return new_nodes
 
                 
-# Start state is like
+# Start state
 init_state = np.array([
     [-1,-1,-1,0,-1,0,-1,0,-1,-1],
     [0,2,3,4,5,6,7,8,9,1]
 ])
 
 #-1 represents solid dirt, each number is a person, 0 is empty space
-print(get_cost(init_state))
 pq = PriorityQueue()
 init_node = Node(init_state,"BEGIN",None)
 pq.put(init_node)
@@ -136,9 +131,17 @@ pq.put(init_node)
 iterations = 0
 expansions = 0
 max_queue_size = 0
+# Iterate until all possible nodes have been tried
+
+choice = int(input("Enter 1 for default problem, 2 for custom configuration: "))
+if choice == 2:
+    soldier_list = input("Give the order of soldiers 1->9 in the trench at the start, separated by spaces:\n").split(" ")
+    for i, soldier in enumerate(soldier_list):
+        init_state[1][i+1] = int(soldier)
+
 while not pq.empty():
-    if expansions % 25_000 == 0:
-        print(f"Iterations: {iterations}\nMax_Queue_Size: {max_queue_size}\nExpansions: {expansions}\n")
+    if expansions % 100_000 == 0:
+        print(f"\nIterations: {iterations}\nMax_Queue_Size: {max_queue_size}\nExpansions: {expansions}\n")
     # tracking
     iterations += 1
     max_queue_size = max(max_queue_size,pq.qsize())
@@ -148,21 +151,21 @@ while not pq.empty():
         node = pq.get()
         iterations += 1
 
-    if expansions % 100_000 == 0:
-      print(f"Best State So Far:\n\n{node.state}")
+    # if expansions % 100_000 == 0:
+    #   print(f"Best State So Far:\n\n{node.state}")
 
-    # goal check
+    # goal check,
     if is_goal(node.state):
         print("Seargant is in place...")
         moves = []
         depth = node.depth
         while node.parent is not None:
-            moves.append(node.action)
+            moves.append(node.state)
             node = node.parent
-        moves.append(node.action)
+        moves.append(node.state)
         for move in moves[::-1]:
-            print(f"{move}",end=" -> ")
-        print(f"Max_Queue_Size: {max_queue_size}\nExpansions: {expansions}\nDepth: {depth}\n")
+            print(f"{move}",end="\n\n")
+        print(f"\nMax_Queue_Size: {max_queue_size}\nExpansions: {expansions}\nDepth: {depth}\n")
         quit()
 
     # expand current lowest code node
