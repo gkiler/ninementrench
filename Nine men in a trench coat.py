@@ -154,6 +154,8 @@ while not pq.empty():
     # if expansions % 100_000 == 0:
     #   print(f"Best State So Far:\n\n{node.state}")
 
+
+
     # goal check,
     if is_goal(node.state):
         print("Seargant is in place...")
