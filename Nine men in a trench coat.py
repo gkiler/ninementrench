@@ -21,9 +21,13 @@ class Node():
             self.depth = 0
 
     def __lt__(self,rhs):
+        if self.cost == rhs.cost:
+            return self.depth < rhs.depth
         return self.cost < rhs.cost
     
     def __lte__(self,rhs):
+        if self.cost == rhs.cost:
+            return self.depth <= rhs.depth
         return self.cost <= rhs.cost
 
 
@@ -46,8 +50,13 @@ goal_locs = [
     (-1,-1),(1,0),(1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8)
 ]
 def get_cost(game_state):
+    # if np.where(game_state == 1) != (1,0):
+    #     soldier_range = range(1,2)
+    # else:
+    #     soldier_range = range(2,10)
+    soldier_range = range(1,10)
     cost = 0
-    for soldier in range(1,10):
+    for soldier in soldier_range:
         # soldiers 1->9
         soldier_loc = np.where(game_state == soldier)
         cost += int(abs((soldier_loc[0] - goal_locs[soldier][0])) + abs((soldier_loc[1] - goal_locs[soldier][1])))
@@ -67,8 +76,17 @@ def expand(node):
     # can the guy move up, down, left, or right?
     new_nodes = []
     game_state = node.state
-    for i in range(game_state.shape[0]):
-        for j in range(game_state.shape[1]):
+
+    # set ranges for iterating to find soldiers
+    # if soldier 1 is in place, leave him alone
+    yrange = range(game_state.shape[0])
+    if np.where(node.state == 1) == (1,0):
+        xrange = range(game_state.shape[1][1:])
+    else:
+        xrange = range(game_state.shape[1])
+
+    for i in yrange:
+        for j in xrange:
             if game_state[i,j] > 0:
                 moves = [(i+1,j),(i-1,j),(i,j+1),(i,j-1)]
                 for move in moves:
@@ -100,7 +118,7 @@ iterations = 0
 expansions = 0
 max_queue_size = 0
 while not pq.empty():
-    if iterations % 25000 == 0:
+    if iterations % 25_000 == 0:
         print(f"Iterations: {iterations}\nMax_Queue_Size: {max_queue_size}\nExpansions: {expansions}\n")
     # tracking
     iterations += 1
