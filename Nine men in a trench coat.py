@@ -65,8 +65,8 @@ def get_cost(game_state):
         cost += int(abs((soldier_loc[0] - goal_locs[soldier][0])) + abs((soldier_loc[1] - goal_locs[soldier][1])))
     return cost
 
-    cost = np.sum(np.equal(game_state,goal_state)) # Misplaced heuristic doesnt seem to work either
-    return cost
+    # cost = np.sum(np.equal(game_state,goal_state)) # Misplaced heuristic doesnt seem to work either
+    # return cost
 
     loc = np.where(game_state == 1) 
     return loc[0] + loc[1] # Distance for seargant does not work. Needs manhattan
@@ -88,8 +88,9 @@ def expand(node):
             if game_state[y,x] > 0:
                 # check left, right, up, down
                 moves = []
+                # to get maximum move distance,
+                # find if gamestate coord + i is 0, continue, etc
                 try:
-                    temp = (y,x)
                     if game_state[y+1,x] == 0:
                         moves.append((y+1,x))
                 except:
@@ -100,13 +101,39 @@ def expand(node):
                 except:
                     pass
                 try:
-                    if game_state[y,x+1] == 0:
-                        moves.append(y,x+1)
+                    i = 1
+                    # find if one over is empty, then 
+                    # if two over is empty, so on.
+                    # when not empty, ignore
+                    temp = (y,x)
+                    anything = False
+                    while True:
+                        if game_state[y,x+i] == 0:
+                            temp = (y,x+i)
+                            i += 1
+                            anything = True
+                        else:
+                            break
+                    if anything:
+                        moves.append(temp)
                 except:
                     pass
                 try:
-                    if game_state[y,x-1] == 0:
-                        moves.append((y,x-1))
+                    i = 1
+                    # find if one over is empty, then 
+                    # if two over is empty, so on.
+                    # when not empty, ignore
+                    temp = (y,x)
+                    anything = False
+                    while True:
+                        if game_state[y,x-i] == 0:
+                            temp = (y,x-i)
+                            i += 1
+                            anything = True
+                        else:
+                            break
+                    if anything:
+                        moves.append(temp)
                 except:
                     pass
                 for move in moves:
