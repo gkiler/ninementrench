@@ -43,9 +43,10 @@ def see_state(game_state):
     seen_states.add(game_state.to_bytes())
 
 goal_locs = [
-    (-1,-1),(1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8),(1,9)
+    (-1,-1),(1,0),(1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8)
 ]
 def get_cost(game_state):
+    if np.where(game_state == 1) != (1,0)
     cost = 0
     for soldier in range(1,10):
         # soldiers 1->9
